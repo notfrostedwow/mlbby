@@ -52,32 +52,7 @@ const button = document.getElementById("valentinesButton");
 
 button.addEventListener("click", () => {
   if (button.textContent === "Click Me! ❤") {
-    button.textContent = "loading...";
-    fetch('send_mail.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      }
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.text();
-      })
-      .then(data => {
-        console.log(data);
-        if (data.includes("Message has been sent")) {
-          button.textContent = "Check Your Email 🙃";
-        } else {
-          console.error('Failed to send email:', data);
-          button.textContent = "Error 😞";
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        button.textContent = "Error 😞";
-      });
+    window.location.href = 'message.html';  // Replace with your new webpage
   }
 });
 
@@ -87,9 +62,41 @@ function drawTextWithLineBreaks(lines, x, y, fontSize, lineHeight) {
     });
 }
 
+// At the top with other variables
+// Create audio element first
+const audioElement = document.createElement('audio');
+audioElement.id = 'backgroundMusic';
+audioElement.loop = true;
+const sourceElement = document.createElement('source');
+sourceElement.src = 'public/audio/bkg.mp3';
+sourceElement.type = 'audio/mp3';
+audioElement.appendChild(sourceElement);
+document.body.appendChild(audioElement);
+
+var animationStarted = false;
+
+const overlay = document.getElementById('clickOverlay');
+
+// Add click handler to start everything
+document.addEventListener('click', function startExperience() {
+    if (!animationStarted) {
+        animationStarted = true;
+        audioElement.play().catch(err => console.log("Audio playback failed:", err));
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 1000);
+        document.removeEventListener('click', startExperience);
+    }
+});
+
+// Then modify drawText function to remove the audio start
 function drawText() {
-    var fontSize = Math.min(30, window.innerWidth / 24); // Adjust font size based on screen width
+    var fontSize = Math.min(30, window.innerWidth / 24);
     var lineHeight = 8;
+
+    // Remove this part since we're handling audio in the click handler
+    // if(frameNumber === 1) {
+    //     audioElement.play().catch(err => console.log("Audio playback failed:", err));
+    // }
 
     context.font = fontSize + "px Comic Sans MS";
     context.textAlign = "center";
@@ -112,7 +119,6 @@ function drawText() {
         opacity = opacity - 0.01;
     }
 
-    //needs this if statement to reset the opacity before next statement on canvas
     if(frameNumber == 500){
         opacity = 0;
     }
@@ -207,19 +213,6 @@ function drawText() {
 
         opacity = opacity + 0.01;
     }
-    
-    if(frameNumber >= 2750 && frameNumber < 99999){
-        context.fillStyle = `rgba(45, 45, 255, ${secondOpacity})`;
-
-
-        if (window.innerWidth < 600) {
-            drawTextWithLineBreaks(["and I can't wait to spend all the time in", "the world to share that love with you!"], canvas.width / 2, (canvas.height/2 + 60), fontSize, lineHeight);
-        } else {
-            context.fillText("and I can't wait to spend all the time in the world to share that love with you!", canvas.width/2, (canvas.height/2 + 50));
-        }
-
-        secondOpacity = secondOpacity + 0.01;
-    }
 
     if(frameNumber >= 3000 && frameNumber < 99999){
         context.fillStyle = `rgba(45, 45, 255, ${thirdOpacity})`;
@@ -256,3 +249,13 @@ window.addEventListener("resize", function () {
 });
 
 window.requestAnimationFrame(draw);
+
+// Add this to handle music when navigating away
+button.addEventListener("click", () => {
+  if (button.textContent === "Click Me! ❤") {
+    audioElement.pause();
+    window.location.href = 'message.html';
+  }
+});
+
+// Update the audio source in the HTML
